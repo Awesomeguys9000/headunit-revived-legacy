@@ -61,6 +61,11 @@ class SettingsFragment : Fragment() {
 
     private var pendingKillOnDisconnect: Boolean? = null
     private var pendingAutoEnableHotspot: Boolean? = null
+
+    // Focus steal prevention
+    private var pendingPreventFocusSteal: Boolean? = null
+    private var pendingAllowHomeToDropFocus: Boolean? = null
+    private var pendingFocusRecoverDelayMs: Int? = null
     
     // Custom Insets
     private var pendingInsetLeft: Int? = null
@@ -112,6 +117,10 @@ class SettingsFragment : Fragment() {
 
         pendingKillOnDisconnect = settings.killOnDisconnect
         pendingAutoEnableHotspot = settings.autoEnableHotspot
+
+        pendingPreventFocusSteal = settings.preventFocusSteal
+        pendingAllowHomeToDropFocus = settings.allowHomeToDropFocus
+        pendingFocusRecoverDelayMs = settings.focusRecoverDelayMs
         
         pendingInsetLeft = settings.insetLeft
         pendingInsetTop = settings.insetTop
@@ -235,6 +244,10 @@ class SettingsFragment : Fragment() {
 
         pendingKillOnDisconnect?.let { settings.killOnDisconnect = it }
         pendingAutoEnableHotspot?.let { settings.autoEnableHotspot = it }
+
+        pendingPreventFocusSteal?.let { settings.preventFocusSteal = it }
+        pendingAllowHomeToDropFocus?.let { settings.allowHomeToDropFocus = it }
+        pendingFocusRecoverDelayMs?.let { settings.focusRecoverDelayMs = it }
         
         pendingInsetLeft?.let { settings.insetLeft = it }
         pendingInsetTop?.let { settings.insetTop = it }
@@ -302,7 +315,10 @@ class SettingsFragment : Fragment() {
                         pendingAssistantVolumeOffset != settings.assistantVolumeOffset ||
                         pendingNavigationVolumeOffset != settings.navigationVolumeOffset ||
                         pendingKillOnDisconnect != settings.killOnDisconnect ||
-                        pendingAutoEnableHotspot != settings.autoEnableHotspot
+                        pendingAutoEnableHotspot != settings.autoEnableHotspot ||
+                        pendingPreventFocusSteal != settings.preventFocusSteal ||
+                        pendingAllowHomeToDropFocus != settings.allowHomeToDropFocus ||
+                        pendingFocusRecoverDelayMs != settings.focusRecoverDelayMs
 
         hasChanges = anyChange
 
@@ -534,6 +550,50 @@ class SettingsFragment : Fragment() {
                 }
             }
         ))
+
+        items.add(SettingItem.ToggleSettingEntry(
+            stableId = "preventFocusSteal",
+            nameResId = R.string.prevent_focus_steal,
+            descriptionResId = R.string.prevent_focus_steal_description,
+            isChecked = pendingPreventFocusSteal!!,
+            onCheckedChanged = { isChecked ->
+                pendingPreventFocusSteal = isChecked
+                checkChanges()
+                updateSettingsList()
+            }
+        ))
+
+        if (pendingPreventFocusSteal == true) {
+            items.add(SettingItem.ToggleSettingEntry(
+                stableId = "allowHomeToDropFocus",
+                nameResId = R.string.allow_home_to_drop_focus,
+                descriptionResId = R.string.allow_home_to_drop_focus_description,
+                isChecked = pendingAllowHomeToDropFocus!!,
+                onCheckedChanged = { isChecked ->
+                    pendingAllowHomeToDropFocus = isChecked
+                    checkChanges()
+                    updateSettingsList()
+                }
+            ))
+
+            val delayLabels = arrayOf("Instant (0ms)", "250ms", "500ms")
+            items.add(SettingItem.SettingEntry(
+                stableId = "focusRecoverDelay",
+                nameResId = R.string.focus_recover_delay,
+                value = delayLabels[pendingFocusRecoverDelayMs!!.coerceIn(0, 2)],
+                onClick = { _ ->
+                    AlertDialog.Builder(requireContext())
+                        .setTitle(R.string.focus_recover_delay)
+                        .setSingleChoiceItems(delayLabels, pendingFocusRecoverDelayMs!!.coerceIn(0, 2)) { dialog, which ->
+                            pendingFocusRecoverDelayMs = which
+                            checkChanges()
+                            dialog.dismiss()
+                            updateSettingsList()
+                        }
+                        .show()
+                }
+            ))
+        }
 
         // --- Navigation Settings ---
         items.add(SettingItem.CategoryHeader("navigation", R.string.category_navigation))

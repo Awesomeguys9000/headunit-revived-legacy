@@ -43,6 +43,8 @@ import com.andrerinas.headunitrevived.view.OverlayTouchView
 import com.andrerinas.headunitrevived.utils.HeadUnitScreenConfig
 import com.andrerinas.headunitrevived.utils.SystemUI
 import android.content.IntentFilter
+import android.os.Handler
+import android.os.Looper
 
 class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, VideoDimensionsListener {
 
@@ -54,6 +56,11 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
     private var isSurfaceSet = false
     private var overlayState = OverlayState.STARTING
     private val watchdogHandler = android.os.Handler(android.os.Looper.getMainLooper())
+
+    // Focus steal prevention
+    private var userLeftIntentionally = false
+    private var isFinishingByBack = false
+    private val focusRecoverHandler = Handler(Looper.getMainLooper())
 
     private val videoWatchdogRunnable = object : Runnable {
         override fun run() {
@@ -314,6 +321,12 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
     override fun onResume() {
         AppLog.i("AapProjectionActivity: onResume")
         super.onResume()
+
+        // Reset focus-steal tracking flags
+        userLeftIntentionally = false
+        isFinishingByBack = false
+        focusRecoverHandler.removeCallbacksAndMessages(null)
+
         watchdogHandler.postDelayed(watchdogRunnable, 2000)
         watchdogHandler.postDelayed(videoWatchdogRunnable, 3000)
         watchdogHandler.postDelayed(reconnectingWatchdog, 5000)
@@ -330,6 +343,45 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
         })
 
         setFullscreen()
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        // Called when the user intentionally navigates away (e.g. Home button).
+        // NOT called when another app forcefully launches on top.
+        userLeftIntentionally = true
+        AppLog.i("AapProjectionActivity: onUserLeaveHint — user left intentionally")
+    }
+
+    override fun onStop() {
+        super.onStop()
+        AppLog.i("AapProjectionActivity: onStop (userLeft=$userLeftIntentionally, finishing=$isFinishingByBack)")
+
+        if (isFinishing || isFinishingByBack) return
+        if (!settings.preventFocusSteal) return
+        if (!commManager.isConnected) return
+
+        val shouldBypass = userLeftIntentionally && settings.allowHomeToDropFocus
+        if (shouldBypass) {
+            AppLog.i("AapProjectionActivity: User pressed Home, allowing exit")
+            return
+        }
+
+        // Another app stole focus — bounce back!
+        val delayMs = when (settings.focusRecoverDelayMs) {
+            0 -> 0L
+            1 -> 250L
+            else -> 500L
+        }
+        AppLog.i("AapProjectionActivity: Focus stolen! Recovering in ${delayMs}ms")
+        focusRecoverHandler.postDelayed({
+            if (commManager.isConnected && !isFinishing) {
+                val intent = Intent(this, AapProjectionActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                }
+                startActivity(intent)
+            }
+        }, delayMs)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -400,6 +452,7 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
         val currentTime = System.currentTimeMillis()
         if (currentTime - lastBackPressTime < 2000) {
             AppLog.i("AapProjectionActivity: Double back press detected. Disconnecting...")
+            isFinishingByBack = true
             commManager.disconnect()
             super.onBackPressed()
         } else {

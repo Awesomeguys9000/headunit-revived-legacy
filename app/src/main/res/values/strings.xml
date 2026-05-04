@@ -386,6 +386,14 @@
     <string name="kill_on_disconnect_boot_warning">You have \"Start on boot\" enabled. If the app closes on disconnect and this device hibernates instead of shutting down, the app may not reopen automatically on the next ignition cycle because no boot event is triggered — the device simply wakes up from sleep.</string>
     <string name="kill_on_disconnect_screen_on_warning">You have \"Start on screen on\" enabled. This setting opens the app every time the screen turns on. Combined with closing on disconnect, the app will close after disconnection but reopen immediately when the screen turns on again, creating a restart loop.</string>
 
+    <!-- Focus Steal Prevention -->
+    <string name="prevent_focus_steal">Prevent focus stealing</string>
+    <string name="prevent_focus_steal_description">Automatically return to Android Auto if another app steals focus while connected</string>
+    <string name="allow_home_to_drop_focus">Allow Home button to exit</string>
+    <string name="allow_home_to_drop_focus_description">When enabled, pressing Home will not trigger the focus recovery. Only apps that launch over Android Auto will be blocked.</string>
+    <string name="focus_recover_delay">Focus recovery delay</string>
+    <string name="focus_recover_delay_description">How long to wait before bringing Android Auto back to the foreground</string>
+
     <string name="wifi_disabled_info">Info: Wi-Fi is disabled.</string>
 
     <!-- Vehicle Info Settings -->

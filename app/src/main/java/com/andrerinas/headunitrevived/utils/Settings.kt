@@ -693,4 +693,17 @@ class Settings(context: Context) {
         get() = prefs.getBoolean("auto-enable-hotspot", false)
         set(value) { prefs.edit().putBoolean("auto-enable-hotspot", value).apply() }
 
+    var preventFocusSteal: Boolean
+        get() = prefs.getBoolean("prevent-focus-steal", false)
+        set(value) { prefs.edit().putBoolean("prevent-focus-steal", value).apply() }
+
+    var allowHomeToDropFocus: Boolean
+        get() = prefs.getBoolean("allow-home-to-drop-focus", true)
+        set(value) { prefs.edit().putBoolean("allow-home-to-drop-focus", value).apply() }
+
+    // 0 = Instant, 1 = 250ms, 2 = 500ms
+    var focusRecoverDelayMs: Int
+        get() = prefs.getInt("focus-recover-delay-ms", 2)
+        set(value) { prefs.edit().putInt("focus-recover-delay-ms", value).apply() }
+
 }

@@ -706,4 +706,12 @@ class Settings(context: Context) {
         get() = prefs.getInt("focus-recover-delay-ms", 2)
         set(value) { prefs.edit().putInt("focus-recover-delay-ms", value).apply() }
 
+    var focusStealBlacklistEnabled: Boolean
+        get() = prefs.getBoolean("focus-steal-blacklist-enabled", false)
+        set(value) { prefs.edit().putBoolean("focus-steal-blacklist-enabled", value).apply() }
+
+    var focusStealBlacklist: Set<String>
+        get() = prefs.getStringSet("focus-steal-blacklist", emptySet()) ?: emptySet()
+        set(value) { prefs.edit().putStringSet("focus-steal-blacklist", value).apply() }
+
 }

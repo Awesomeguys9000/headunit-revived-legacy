@@ -593,6 +593,49 @@ class SettingsFragment : Fragment() {
                         .show()
                 }
             ))
+
+            items.add(SettingItem.ToggleSettingEntry(
+                stableId = "focusStealBlacklistEnabled",
+                nameResId = R.string.focus_steal_blacklist_enabled,
+                descriptionResId = R.string.focus_steal_blacklist_enabled_description,
+                isChecked = settings.focusStealBlacklistEnabled,
+                onCheckedChanged = { isChecked ->
+                    if (isChecked && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP &&
+                        !com.andrerinas.headunitrevived.utils.ForegroundAppDetector.hasUsageStatsPermission(requireContext())) {
+                        // Need Usage Access permission - show dialog
+                        MaterialAlertDialogBuilder(requireContext(), R.style.DarkAlertDialog)
+                            .setTitle(R.string.usage_access_required_title)
+                            .setMessage(R.string.usage_access_required_message)
+                            .setPositiveButton(R.string.open_settings) { _, _ ->
+                                val intent = android.content.Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS)
+                                startActivity(intent)
+                                settings.focusStealBlacklistEnabled = true
+                                updateSettingsList()
+                            }
+                            .setNegativeButton(android.R.string.cancel) { _, _ ->
+                                updateSettingsList()
+                            }
+                            .show()
+                    } else {
+                        settings.focusStealBlacklistEnabled = isChecked
+                        updateSettingsList()
+                    }
+                }
+            ))
+
+            if (settings.focusStealBlacklistEnabled) {
+                val count = settings.focusStealBlacklist.size
+                items.add(SettingItem.SettingEntry(
+                    stableId = "focusBlacklistManage",
+                    nameResId = R.string.focus_blacklist_manage,
+                    value = getString(R.string.focus_blacklist_count, count),
+                    onClick = {
+                        try {
+                            findNavController().navigate(R.id.action_settingsFragment_to_focusBlacklistFragment)
+                        } catch (e: Exception) { }
+                    }
+                ))
+            }
         }
 
         // --- Navigation Settings ---

@@ -393,6 +393,17 @@
     <string name="allow_home_to_drop_focus_description">When enabled, pressing Home will not trigger the focus recovery. Only apps that launch over Android Auto will be blocked.</string>
     <string name="focus_recover_delay">Focus recovery delay</string>
     <string name="focus_recover_delay_description">How long to wait before bringing Android Auto back to the foreground</string>
+    <string name="focus_steal_blacklist_enabled">Use app blacklist</string>
+    <string name="focus_steal_blacklist_enabled_description">Only recover focus when the stealing app is in your blacklist. Requires Usage Access permission on Android 5.0+.</string>
+    <string name="focus_blacklist_manage">Manage blacklisted apps</string>
+    <string name="focus_blacklist_manage_description">Choose which apps should trigger focus recovery</string>
+    <string name="focus_blacklist_title">Focus Blacklist</string>
+    <string name="focus_blacklist_search">Search apps…</string>
+    <string name="focus_blacklist_loading">Loading installed apps…</string>
+    <string name="focus_blacklist_app_icon">App icon</string>
+    <string name="focus_blacklist_count">%d app(s) blacklisted</string>
+    <string name="usage_access_required_title">Usage Access Required</string>
+    <string name="usage_access_required_message">To detect which app stole focus, this feature requires \"Usage Access\" permission. Would you like to open system settings to grant it?</string>
 
     <string name="wifi_disabled_info">Info: Wi-Fi is disabled.</string>
 

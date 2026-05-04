@@ -42,6 +42,7 @@ import com.andrerinas.headunitrevived.utils.Settings
 import com.andrerinas.headunitrevived.view.OverlayTouchView
 import com.andrerinas.headunitrevived.utils.HeadUnitScreenConfig
 import com.andrerinas.headunitrevived.utils.SystemUI
+import com.andrerinas.headunitrevived.utils.ForegroundAppDetector
 import android.content.IntentFilter
 import android.os.Handler
 import android.os.Looper
@@ -365,6 +366,17 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
         if (shouldBypass) {
             AppLog.i("AapProjectionActivity: User pressed Home, allowing exit")
             return
+        }
+
+        // If blacklist mode is enabled, check if the stealing app is in the blacklist
+        if (settings.focusStealBlacklistEnabled) {
+            val foregroundPkg = ForegroundAppDetector.getForegroundPackage(this)
+            AppLog.i("AapProjectionActivity: Blacklist mode, foreground app: $foregroundPkg")
+            if (foregroundPkg == null || foregroundPkg !in settings.focusStealBlacklist) {
+                AppLog.i("AapProjectionActivity: App '$foregroundPkg' is not blacklisted, allowing")
+                return
+            }
+            AppLog.i("AapProjectionActivity: App '$foregroundPkg' IS blacklisted!")
         }
 
         // Another app stole focus — bounce back!

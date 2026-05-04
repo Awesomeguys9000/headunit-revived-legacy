@@ -44,6 +44,17 @@ jobs:
       - name: Build Debug APK
         run: ./gradlew assembleDebug
 
+      - name: Decode Keystore
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        env:
+          HEADUNIT_KEYSTORE_BASE64: ${{ secrets.HEADUNIT_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$HEADUNIT_KEYSTORE_BASE64" ]; then
+            echo "$HEADUNIT_KEYSTORE_BASE64" | base64 --decode > headunit-release-key.jks
+          else
+            echo "Warning: HEADUNIT_KEYSTORE_BASE64 secret is not set. Release build may fail."
+          fi
+
       - name: Build Release APK
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         env:

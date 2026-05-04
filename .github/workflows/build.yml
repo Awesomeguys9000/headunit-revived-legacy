@@ -48,10 +48,14 @@ jobs:
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         env:
           HEADUNIT_KEYSTORE_BASE64: ${{ secrets.HEADUNIT_KEYSTORE_BASE64 }}
+          SEC_KEYSTORE_PASS: ${{ secrets.HEADUNIT_KEYSTORE_PASSWORD }}
+          SEC_KEY_PASS: ${{ secrets.HEADUNIT_KEY_PASSWORD }}
         run: |
           if [ -n "$HEADUNIT_KEYSTORE_BASE64" ]; then
             echo "Decoding provided keystore..."
             echo "$HEADUNIT_KEYSTORE_BASE64" | base64 --decode > headunit-release-key.jks
+            echo "HEADUNIT_KEYSTORE_PASSWORD=$SEC_KEYSTORE_PASS" >> $GITHUB_ENV
+            echo "HEADUNIT_KEY_PASSWORD=$SEC_KEY_PASS" >> $GITHUB_ENV
           else
             echo "Warning: HEADUNIT_KEYSTORE_BASE64 secret is not set. Generating a temporary key for the release build..."
             keytool -genkey -v -keystore headunit-release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias headunit-revived -dname "CN=Temporary, OU=Dev, O=Dummy, L=City, S=State, C=US" -storepass "headunit123" -keypass "headunit123"
@@ -61,9 +65,6 @@ jobs:
 
       - name: Build Release APK
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-        env:
-          HEADUNIT_KEYSTORE_PASSWORD: ${{ secrets.HEADUNIT_KEYSTORE_PASSWORD }}
-          HEADUNIT_KEY_PASSWORD: ${{ secrets.HEADUNIT_KEY_PASSWORD }}
         run: ./gradlew assembleRelease
 
       - name: Upload Debug APK

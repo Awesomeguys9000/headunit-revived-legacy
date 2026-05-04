@@ -61,6 +61,7 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
     // Focus steal prevention
     private var userLeftIntentionally = false
     private var isFinishingByBack = false
+    private var isBounceBackPending = false
     private val focusRecoverHandler = Handler(Looper.getMainLooper())
 
     private val videoWatchdogRunnable = object : Runnable {
@@ -326,11 +327,19 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
         // Reset focus-steal tracking flags
         userLeftIntentionally = false
         isFinishingByBack = false
+        isBounceBackPending = false
         focusRecoverHandler.removeCallbacksAndMessages(null)
 
         watchdogHandler.postDelayed(watchdogRunnable, 2000)
         watchdogHandler.postDelayed(videoWatchdogRunnable, 3000)
         watchdogHandler.postDelayed(reconnectingWatchdog, 5000)
+
+        // If we were stopped and came back (e.g., after focus recovery or manual return),
+        // request a video keyframe to resume rendering
+        if (isSurfaceSet && commManager.isConnected) {
+            AppLog.i("AapProjectionActivity: Resuming — requesting video focus")
+            commManager.send(VideoFocusEvent(gain = true, unsolicited = true))
+        }
 
         // Register key event receiver safely for Android 14+
         ContextCompat.registerReceiver(this, keyCodeReceiver, IntentFilters.keyEvent, ContextCompat.RECEIVER_NOT_EXPORTED)
@@ -386,12 +395,15 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
             else -> 500L
         }
         AppLog.i("AapProjectionActivity: Focus stolen! Recovering in ${delayMs}ms")
+        isBounceBackPending = true
         focusRecoverHandler.postDelayed({
             if (commManager.isConnected && !isFinishing) {
                 val intent = Intent(this, AapProjectionActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                 }
                 startActivity(intent)
+            } else {
+                isBounceBackPending = false
             }
         }, delayMs)
     }
@@ -525,10 +537,14 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
     }
 
     override fun onSurfaceDestroyed(surface: android.view.Surface) {
-        AppLog.i("SurfaceCallback: onSurfaceDestroyed. Surface: $surface")
+        AppLog.i("SurfaceCallback: onSurfaceDestroyed. Surface: $surface (bounceBack=$isBounceBackPending)")
         isSurfaceSet = false
-        commManager.send(VideoFocusEvent(gain = false, unsolicited = false))
-        videoDecoder.stop("surfaceDestroyed")
+        // If we're about to bounce back, don't tell the phone to stop sending video.
+        // The surface will be recreated when the activity returns.
+        if (!isBounceBackPending) {
+            commManager.send(VideoFocusEvent(gain = false, unsolicited = false))
+            videoDecoder.stop("surfaceDestroyed")
+        }
     }
 
     override fun onVideoDimensionsChanged(width: Int, height: Int) {

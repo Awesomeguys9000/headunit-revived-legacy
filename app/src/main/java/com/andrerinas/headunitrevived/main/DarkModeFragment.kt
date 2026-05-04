@@ -48,6 +48,7 @@ class DarkModeFragment : Fragment(), SensorEventListener {
     private var pendingMonochromeIcons: Boolean? = null
     private var pendingUseExtremeDarkMode: Boolean? = null
     private var pendingUseGradientBackground: Boolean? = null
+    private var pendingUseBlackBackground: Boolean? = null
 
     // Pending night mode settings (Android Auto)
     private var pendingNightMode: Settings.NightMode? = null
@@ -95,6 +96,7 @@ class DarkModeFragment : Fragment(), SensorEventListener {
         pendingMonochromeIcons = settings.monochromeIcons
         pendingUseExtremeDarkMode = settings.useExtremeDarkMode
         pendingUseGradientBackground = settings.useGradientBackground
+        pendingUseBlackBackground = settings.useBlackBackground
 
         pendingNightMode = settings.nightMode
         pendingThresholdLux = settings.nightModeThresholdLux
@@ -192,6 +194,7 @@ class DarkModeFragment : Fragment(), SensorEventListener {
                 pendingAppThemeManualStart != settings.appThemeManualStart ||
                 pendingAppThemeManualEnd != settings.appThemeManualEnd
         val gradientChanged = pendingUseGradientBackground != settings.useGradientBackground
+        val blackBackgroundChanged = pendingUseBlackBackground != settings.useBlackBackground
         val extremeDarkChanged = pendingUseExtremeDarkMode != settings.useExtremeDarkMode
         val monochromeIconsChanged = pendingMonochromeIcons != settings.monochromeIcons
         val viewModeChanged = pendingViewMode != settings.viewMode
@@ -211,6 +214,7 @@ class DarkModeFragment : Fragment(), SensorEventListener {
         pendingMonochromeIcons?.let { settings.monochromeIcons = it }
         pendingUseExtremeDarkMode?.let { settings.useExtremeDarkMode = it }
         pendingUseGradientBackground?.let { settings.useGradientBackground = it }
+        pendingUseBlackBackground?.let { settings.useBlackBackground = it }
 
         // Save AA monochrome settings
         pendingAaMonochromeEnabled?.let { settings.aaMonochromeEnabled = it }
@@ -261,7 +265,7 @@ class DarkModeFragment : Fragment(), SensorEventListener {
         Toast.makeText(context, getString(R.string.settings_saved), Toast.LENGTH_SHORT).show()
 
         // Signal visual change so all activities (including MainActivity) pick up changes
-        if (gradientChanged || extremeDarkChanged || monochromeIconsChanged || themeChanged ||
+        if (gradientChanged || blackBackgroundChanged || extremeDarkChanged || monochromeIconsChanged || themeChanged ||
             (appThemeThresholdChanged && pendingAppTheme?.let { !AppThemeManager.isStaticMode(it) } == true)) {
             AppThemeManager.signalVisualChange()
         }
@@ -276,6 +280,7 @@ class DarkModeFragment : Fragment(), SensorEventListener {
                 pendingMonochromeIcons != settings.monochromeIcons ||
                 pendingUseExtremeDarkMode != settings.useExtremeDarkMode ||
                 pendingUseGradientBackground != settings.useGradientBackground ||
+                pendingUseBlackBackground != settings.useBlackBackground ||
                 pendingNightMode != settings.nightMode ||
                 pendingThresholdLux != settings.nightModeThresholdLux ||
                 pendingThresholdBrightness != settings.nightModeThresholdBrightness ||
@@ -340,7 +345,10 @@ class DarkModeFragment : Fragment(), SensorEventListener {
                 isChecked = pendingUseExtremeDarkMode!!,
                 onCheckedChanged = { isChecked ->
                     pendingUseExtremeDarkMode = isChecked
-                    if (isChecked) pendingUseGradientBackground = false
+                    if (isChecked) {
+                        pendingUseGradientBackground = false
+                        pendingUseBlackBackground = false
+                    }
                     checkChanges()
                     updateSettingsList()
                 }
@@ -388,6 +396,21 @@ class DarkModeFragment : Fragment(), SensorEventListener {
                 nameOverride = gradientName,
                 onCheckedChanged = { isChecked ->
                     pendingUseGradientBackground = isChecked
+                    if (isChecked) pendingUseBlackBackground = false
+                    checkChanges()
+                    updateSettingsList()
+                }
+            ))
+
+            items.add(SettingItem.ToggleSettingEntry(
+                stableId = "useBlackBackground",
+                nameResId = R.string.use_black_background,
+                descriptionResId = R.string.use_black_background_desc,
+                isChecked = pendingUseBlackBackground!!,
+                isEnabled = gradientEnabled,
+                onCheckedChanged = { isChecked ->
+                    pendingUseBlackBackground = isChecked
+                    if (isChecked) pendingUseGradientBackground = false
                     checkChanges()
                     updateSettingsList()
                 }

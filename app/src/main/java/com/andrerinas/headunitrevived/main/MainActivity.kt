@@ -69,6 +69,8 @@ class MainActivity : BaseActivity() {
         if (mainSettings.appTheme == Settings.AppTheme.EXTREME_DARK ||
             (mainSettings.useExtremeDarkMode && isNightActive)) {
             theme.applyStyle(R.style.ThemeOverlay_ExtremeDark, true)
+        } else if (mainSettings.useBlackBackground) {
+            theme.applyStyle(R.style.ThemeOverlay_BlackBackground, true)
         } else if (mainSettings.useGradientBackground) {
             theme.applyStyle(R.style.ThemeOverlay_GradientBackground, true)
         }

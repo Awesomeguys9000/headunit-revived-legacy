@@ -37,6 +37,9 @@
     <string name="app_theme_description">Control the app\'s visual appearance</string>
     <string name="change_app_theme">Change App Theme</string>
     <string name="monochrome_icons">Monochrome icons</string>
+    <string name="monochrome_icons_desc">Applies a flat, monochrome tint to application icons for a cleaner look.</string>
+    <string name="use_black_background">Solid Black Background</string>
+    <string name="use_black_background_desc">Replaces the blue gradient background with pure black.</string>
     <string name="monochrome_icons_description">Use grayscale icons on the home screen in Dark or Extreme Dark mode</string>
     <string name="use_extreme_dark">Use Extreme Dark</string>
     <string name="use_extreme_dark_description">Use pure black background when dark mode is active</string>

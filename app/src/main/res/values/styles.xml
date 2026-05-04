@@ -70,4 +70,8 @@
     <style name="ThemeOverlay.GradientBackground" parent="">
         <item name="android:windowBackground">@drawable/bg_gradient</item>
     </style>
+
+    <style name="ThemeOverlay.BlackBackground" parent="">
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
 </resources>

@@ -660,6 +660,10 @@ class Settings(context: Context) {
         get() = prefs.getBoolean("use-gradient-background", false)
         set(value) { prefs.edit().putBoolean("use-gradient-background", value).apply() }
 
+    var useBlackBackground: Boolean
+        get() = prefs.getBoolean("use-black-background", false)
+        set(value) { prefs.edit().putBoolean("use-black-background", value).apply() }
+
     var aaMonochromeEnabled: Boolean
         get() = prefs.getBoolean("aa-monochrome-enabled", false)
         set(value) { prefs.edit().putBoolean("aa-monochrome-enabled", value).apply() }

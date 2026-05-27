@@ -70,7 +70,17 @@ public class TwilightCalculator {
         // declination of sun
         double solarDec = Math.asin(Math.sin(solarLng) * Math.sin(OBLIQUITY));
         final double latRad = latitude * DEGREES_TO_RADIANS;
-        double cosHourAngle = (Math.sin(ALTIDUTE_CORRECTION_EARLY_NIGHT) - Math.sin(latRad)
+        
+        // Apply altitude correction with hemisphere awareness
+        // Northern hemisphere: apply positive correction before sunset
+        // Southern hemisphere: apply positive correction before sunrise
+        float altitudeCorrection = ALTIDUTE_CORRECTION_EARLY_NIGHT;
+        if (latitude < 0) {
+            // Southern hemisphere: negate the correction for correct twilight timing
+            altitudeCorrection = -ALTIDUTE_CORRECTION_EARLY_NIGHT;
+        }
+        
+        double cosHourAngle = (Math.sin(altitudeCorrection) - Math.sin(latRad)
                 * Math.sin(solarDec)) / (Math.cos(latRad) * Math.cos(solarDec));
         // The day or night never ends for the given date and location, if this value is out of
         // range.
